@@ -12,8 +12,9 @@
   let keys=new Set(),joy={x:0,y:0},joyPointer=null,foods=[],schools=[],particles=[],rings=[],currentTarget=null,guide=false;
   let dialogue=null,panelReturn='playing',resting=null,captionUntil=0,bannerUntil=0,saveClock=0,audioClock=0,sound=false,audio=null,master=null,saved=null,assetCrop={x:0,y:0,w:1760,h:880},smallFish=null;
   let storageWarning=false,largeMap=null;
-  function resize(){width=canvas.clientWidth||innerWidth;height=canvas.clientHeight||innerHeight;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=width*dpr;canvas.height=height*dpr;scale=height/viewH;viewW=width/scale;ctx.setTransform(dpr,0,0,dpr,0,0);if(['playing','dialogue','panel'].includes(mode))setGameUI(true);}
+  function resize(){width=canvas.clientWidth||innerWidth;height=canvas.clientHeight||innerHeight;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=width*dpr;canvas.height=height*dpr;scale=height/viewH;viewW=width/scale;ctx.setTransform(dpr,0,0,dpr,0,0);if(['playing','dialogue','panel'].includes(mode)){boundCamera();setGameUI(true);}}
   new ResizeObserver(resize).observe(canvas);resize();
+  function boundCamera(){camera.x=clamp(camera.x,Math.min(viewW/2,W/2),Math.max(W-viewW/2,W/2));camera.y=clamp(camera.y,viewH/2,H-viewH/2);}
   function validateSave(s){if(!s||s.version!==3||!Number.isInteger(s.region)||s.region<0||s.region>5||!Array.isArray(s.progress)||s.progress.length!==6||s.progress.some(p=>!Number.isInteger(p)||p<0||p>4))return null;return {...s,unlocked:clamp(Number(s.unlocked)||0,0,5),party:Array.isArray(s.party)?s.party.filter(n=>['Ada','Mira','Nara'].includes(n)).slice(0,3):[],journal:Array.isArray(s.journal)?s.journal.filter(e=>e&&typeof e.id==='string'&&Array.isArray(e.pages)).slice(0,35):[],picked:Array.isArray(s.picked)?s.picked.filter(v=>typeof v==='string').slice(0,180):[],puzzle:s.puzzle&&typeof s.puzzle==='object'?s.puzzle:{},search:s.search&&typeof s.search==='object'?s.search:{},snacks:clamp(Number(s.snacks)||0,0,9),playTime:Math.max(0,Number(s.playTime)||0),position:{x:clamp(Number(s.position?.x)||430,130,W-130),y:clamp(Number(s.position?.y)||1000,180,H-160)}};}
   try{saved=validateSave(JSON.parse(localStorage.getItem(KEY)));}catch{}
   function snapshot(){return {version:3,region,progress:[...progress],unlocked,party:[...party],journal,picked,puzzle,search,snacks,playTime,introSeen,completed,ending,position:{x:player.x,y:player.y}};}
@@ -27,7 +28,7 @@
   function buildWorld(){
     foods=Array.from({length:27},(_,i)=>({id:region+'-food-'+i,x:i<9?720+seed(i+10)*1050:450+seed(i+10)*(W-900),y:440+seed(i+95)*950,phase:seed(i+51)*6,alive:!picked.includes(region+'-food-'+i)}));
     schools=Array.from({length:30},(_,i)=>({x:250+seed(i+360)*(W-500),y:240+seed(i+580)*(H-450),vx:(seed(i+150)-.5)*25,vy:0,phase:seed(i+75)*7,size:18+seed(i+121)*18}));
-    companions=party.map((name,i)=>({name,x:player.x-(i+1)*90,y:player.y+(i%2?25:-25),vx:0,vy:0,face:1,phase:i}));particles=[];rings=[];currentTarget=null;updateHUD();
+    companions=party.map((name,i)=>({name,x:player.x-(i+1)*90,y:player.y+(i%2?25:-25),vx:0,vy:0,face:1,phase:i}));particles=[];rings=[];currentTarget=null;boundCamera();updateHUD();
   }
   function start(resume=false){if(!ready)throw new Error('Görseller henüz hazır değil');clearInput();
     if(resume&&saved){const s=validateSave(saved);if(!s)throw new Error('Kayıt okunamadı');region=s.region;progress=[...s.progress];unlocked=s.unlocked;party=[...s.party];journal=[...s.journal];picked=[...s.picked];puzzle={...s.puzzle};search={...s.search};snacks=s.snacks;playTime=s.playTime;introSeen=!!s.introSeen;completed=!!s.completed;ending=s.ending??null;player={x:s.position.x,y:s.position.y,vx:0,vy:0,face:1,tilt:0,turn:1,phase:0,stroke:0};}

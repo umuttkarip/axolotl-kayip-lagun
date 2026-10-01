@@ -29,11 +29,13 @@
   let decor=[],shotSerial=0,popAt=0,checkpoint=null;
   let defenceTime=0,reinforceTimer=9,surgeTimer=35,surgeLeft=0,enemySerial=0;
   let friendHelpUsed=false,friendHelpTimer=12,healingTrails=[];
+  const guideMotion={target:null,x:0,y:0,angle:0,ready:false};
+  let guideLayout=null;
   const checkpointKey='axolotl-adventure-v6';
   try{checkpoint=readCheckpoint(JSON.parse(localStorage.getItem(checkpointKey)));}catch{}
   try {best=Number(localStorage.getItem('axolotl-best-v2'))||0;} catch {}
 
-  function resize(){width=canvas.clientWidth||innerWidth;height=canvas.clientHeight||innerHeight;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);scale=height/850;viewH=850;viewW=width/scale;ctx.setTransform(dpr,0,0,dpr,0,0);if(['playing','paused','upgrade'].includes(mode)){camera.x=player.x;camera.y=player.y;boundCamera();setControls(true);}}
+  function resize(){width=canvas.clientWidth||innerWidth;height=canvas.clientHeight||innerHeight;const dpr=Math.min(devicePixelRatio||1,2);canvas.width=Math.round(width*dpr);canvas.height=Math.round(height*dpr);scale=height/850;viewH=850;viewW=width/scale;guideLayout=null;guideMotion.ready=false;ctx.setTransform(dpr,0,0,dpr,0,0);if(['playing','paused','upgrade'].includes(mode)){camera.x=player.x;camera.y=player.y;boundCamera();setControls(true);}}
   new ResizeObserver(resize).observe(canvas);resize();
   function boundCamera(){camera.x=clamp(camera.x,Math.min(viewW/2,W/2),Math.max(W-viewW/2,W/2));camera.y=clamp(camera.y,viewH/2,H-viewH/2);}
   function tone(freq,duration=.16,type='sine',volume=.035,end=freq){if(!sound)return;try {audio??=new (window.AudioContext||window.webkitAudioContext)();audio.resume();if(!master){master=audio.createGain();master.gain.value=.55;master.connect(audio.destination);}const osc=audio.createOscillator(),gain=audio.createGain();osc.type=type;osc.frequency.setValueAtTime(freq,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(Math.max(30,end),audio.currentTime+duration);gain.gain.setValueAtTime(.001,audio.currentTime);gain.gain.linearRampToValueAtTime(volume,audio.currentTime+.015);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);osc.connect(gain);gain.connect(master);osc.start();osc.stop(audio.currentTime+duration+.03);}catch{}}
@@ -55,6 +57,7 @@
   function createEnemy(i,near=false){const pool=playMode==='sprint'?['fish','jelly']:chapters[chapter].pool,type=pool[i%pool.length],stats={fish:[75,165],jelly:[65,90],darter:[70,125],spitter:[95,105],guard:[180,120]}[type],hp=Math.round(stats[0]*(.5+.5*difficulty));let x,y;for(let tries=0;tries<16;tries++){const a=rand(-Math.PI,Math.PI),r=rand(near?430:550,near?700:1050);x=clamp(player.x+Math.cos(a)*r,140,W-140);y=clamp(player.y+Math.sin(a)*r,220,H-140);if(Math.hypot(x-player.x,y-player.y)>360)break;}return {x,y,type,hp,maxHp:hp,speed:stats[1],phase:rand(0,7),hit:0,vx:0,vy:0,attack:rand(2.4,4.5),windup:0,charge:0,aimX:0,aimY:0,reward:Math.round(65+chapter*18+stats[0]*.3)};}
   function buildChapter(continuing=false){
     const s=stageSpec(),mirror=stage%2===1,px=x=>mirror?W-x:x;
+    guideMotion.target=null;guideLayout=null;if(!continuing)guideMotion.ready=false;
     pearls=0;rescues=0;stageCount=0;stageKills=0;stageHits=0;stageElapsed=0;stageAwarded=false;defenceTime=0;
     collectibles=continuing?collectibles.filter(i=>i.alive&&!i.quest):[];boss=null;portal={x:2140,y:680,open:false};
     if(!continuing){shots=[];hostileShots=[];particles=[];texts=[];ghosts=[];buffs={};shieldCharges=0;powerDrops=[];powerTimer=12;event=null;eventTimer=rand(30,45);eventCollected=0;reinforceTimer=9;surgeTimer=rand(38,48);surgeLeft=0;enemySerial=0;friendHelpTimer=12;healingTrails=[];player.x=420;player.y=700;player.vx=0;player.vy=0;player.inv=3.5;player.energy=100;camera.x=player.x;camera.y=player.y;boundCamera();followers.forEach((f,i)=>{f.x=player.x-(i+1)*72;f.y=player.y+20;f.fire=rand(.4,1.4);});}
@@ -192,7 +195,7 @@
     $('challenge-label').textContent=[combat,defence].filter(Boolean).join(' · ')||(playMode==='adventure'?'♡ '+(friendHelpUsed?'Dost yardımı kullanıldı':'Dostların yanında'):'');
     $('power-strip').innerHTML=Object.entries(buffs).filter(([,v])=>v>0).map(([id,v])=>{const p=content.powers[id];return '<span class="power-chip" style="--power-color:'+p.color+'"><b>'+p.symbol+'</b> '+p.name+' <strong>'+Math.ceil(v)+'s'+(id==='shield'?' · '+shieldCharges+'♡':'')+'</strong></span>';}).join('');
     $('event-status').textContent=surgeLeft>0?'✿ Köpük dalgası · '+Math.ceil(surgeLeft)+' sn':event?event.name+' · '+Math.ceil(event.left)+' sn'+(event.id==='trail'?' · '+eventCollected+' / 8':''):'';$('app').dataset.guardian=String(!!boss&&boss.hp>0);
-    updateGuideHUD();
+    updateGuideHUD(0,true);
     if(boss){$('boss-fill').style.width=boss.hp/boss.maxHp*100+'%';$('boss-value').textContent=Math.ceil(boss.hp);}
   }
   function sprite(name,x,y,w,h,flip=false,alpha=1,rotation=0){const im=name==='axo'?art.axo:art.sheet;if(!im.complete||!im.naturalWidth)return;ctx.save();ctx.translate(x,y);ctx.rotate(rotation);if(flip)ctx.scale(-1,1);ctx.globalAlpha=alpha;if(name==='axo')ctx.drawImage(im,80,90,1400,820,-w/2,-h/2,w,h);else{const [sx,sy,sw,sh]=crops[name];ctx.drawImage(im,sx,sy,sw,sh,-w/2,-h/2,w,h);}ctx.restore();}
@@ -266,10 +269,16 @@
   function guideTarget(){
     const s=stageSpec();if(portal.open)return {target:portal,label:'Geçide yüz'};
     const quests=collectibles.filter(i=>i.alive&&(i.quest||i.kind==='baby')&&(!['ring','lantern'].includes(i.kind)||i.order===stageCount));
-    if(quests.length){const item=quests.reduce((a,b)=>dist(a,player)<dist(b,player)?a:b),names={pearl:'İnci',star:'Yıldız',baby:item.name||'Dost',lantern:'Işık',ring:'Halka'};return {target:item,label:(names[item.kind]||'Hazine')+(item.order!==undefined?' '+(item.order+1)+' / '+s.goal:'')};}
+    if(quests.length){const item=stableGuideTarget(quests),names={pearl:'İnci',star:'Yıldız',baby:item.name||'Dost',lantern:'Işık',ring:'Halka'};return {target:item,label:(names[item.kind]||'Hazine')+(item.order!==undefined?' '+(item.order+1)+' / '+s.goal:'')};}
     if(boss&&boss.hp>0)return {target:boss,label:'Yıldız bekçisi'};
-    if(s.type==='combat'||stageKills<(s.requiredKills||0)){const live=enemies.filter(e=>e.hp>0);if(live.length)return {target:live.reduce((a,b)=>dist(a,player)<dist(b,player)?a:b),label:'Köpük oyunu'};}
+    if(s.type==='combat'||stageKills<(s.requiredKills||0)){const live=enemies.filter(e=>e.hp>0);if(live.length)return {target:stableGuideTarget(live),label:'Köpük oyunu'};}
     const friend=followers.find(f=>f.name===s.friend)||followers[0];return friend?{target:friend,label:s.defend?'Birlikte kal · '+Math.max(0,Math.ceil(s.defend-defenceTime))+' sn':'Dostunun yanında'}:null;
+  }
+  function stableGuideTarget(candidates){
+    const nearest=candidates.reduce((a,b)=>dist(a,player)<dist(b,player)?a:b),current=guideMotion.target;
+    // A tiny distance advantage should not flip the compass back and forth.
+    if(current&&candidates.includes(current)){const oldDistance=dist(current,player),newDistance=dist(nearest,player);if(oldDistance-newDistance<Math.max(30,oldDistance*.12))return current;}
+    return guideMotion.target=nearest;
   }
   function guidePlacement(target){
     const tx=(target.x-camera.x)*scale+width/2,ty=(target.y-camera.y)*scale+height/2,px=(player.x-camera.x)*scale+width/2,py=(player.y-camera.y)*scale+height/2;
@@ -277,16 +286,26 @@
     const inside=tx>=70&&tx<=width-70&&ty>=top&&ty<=bottom,angle=Math.atan2(ty-py,tx-px),x=clamp(inside?px+Math.cos(angle)*85:tx,70,width-70),y=clamp(inside?py+Math.sin(angle)*85:ty,top,bottom);
     return {x,y,angle,distance:Math.ceil(dist(player,target)/10),top,bottom};
   }
-  function updateGuideHUD(){
-    const info=guideTarget(),g=$('goal-guide');g.hidden=mode!=='playing'||!info;if(g.hidden)return;const p=guidePlacement(info.target);$('guide-label').textContent=info.label;$('guide-distance').textContent=p.distance>4?p.distance+' kulaç':'';
-    const box=g.getBoundingClientRect(),hw=(box.width||116)/2,hh=(box.height||54)/2,touchTop=$('touch').hidden?height-(height<480?65:135):$('touch').getBoundingClientRect().top,maxY=(touchTop||height-150)-hh-10;
-    const obstacles=[$('mission').parentElement,...(boss?[$('boss-hud')]:[]),...(Object.values(buffs).some(v=>v>0)?[$('power-strip')]:[])];
-    for(const element of obstacles){const r=element?.getBoundingClientRect();if(!r||!Number.isFinite(r.bottom)||p.x+hw<r.left||p.x-hw>r.right||p.y+hh<r.top||p.y-hh>r.bottom)continue;if(r.bottom+hh+8<=maxY)p.y=r.bottom+hh+8;else p.x=clamp(p.x<width/2?r.left-hw-8:r.right+hw+8,hw+8,width-hw-8);}
-    p.y=clamp(p.y,hh+70,Math.max(hh+70,maxY));g.style.left=p.x+'px';g.style.top=p.y+'px';$('guide-arrow').style.transform='rotate('+p.angle+'rad)';
+  function constrainGuide(p){
+    const {hw,hh,maxY,obstacles}=guideLayout;
+    for(const r of obstacles){if(p.x+hw<r.left||p.x-hw>r.right||p.y+hh<r.top||p.y-hh>r.bottom)continue;if(r.bottom+hh+8<=maxY)p.y=r.bottom+hh+8;else p.x=clamp(p.x<width/2?r.left-hw-8:r.right+hw+8,hw+8,width-hw-8);}
+    p.x=clamp(p.x,hw+8,width-hw-8);p.y=clamp(p.y,hh+70,Math.max(hh+70,maxY));return p;
+  }
+  function updateGuideHUD(dt=0,refreshLayout=false){
+    const info=guideTarget(),g=$('goal-guide');g.hidden=mode!=='playing'||!info;if(g.hidden)return;const p=guidePlacement(info.target),label=$('guide-label'),distance=$('guide-distance'),distanceText=p.distance>4?p.distance+' kulaç':'';
+    if(label.textContent!==info.label){label.textContent=info.label;guideLayout=null;}if(distance.textContent!==distanceText){const wasEmpty=!distance.textContent;distance.textContent=distanceText;if(wasEmpty!==!distanceText)guideLayout=null;}
+    if(refreshLayout||!guideLayout){const box=g.getBoundingClientRect(),hw=(box.width||116)/2,hh=(box.height||54)/2,touchTop=$('touch').hidden?height-(height<480?65:135):$('touch').getBoundingClientRect().top;
+      const elements=[$('mission').parentElement,...(boss?[$('boss-hud')]:[]),...(Object.values(buffs).some(v=>v>0)?[$('power-strip')]:[])];
+      guideLayout={hw,hh,maxY:(touchTop||height-150)-hh-10,obstacles:elements.map(e=>e?.getBoundingClientRect()).filter(r=>r&&Number.isFinite(r.bottom))};
+    }
+    constrainGuide(p);
+    if(!guideMotion.ready||reduced){guideMotion.x=p.x;guideMotion.y=p.y;guideMotion.angle=p.angle;guideMotion.ready=true;}
+    else if(dt>0){const blend=1-Math.exp(-14*dt),turn=Math.atan2(Math.sin(p.angle-guideMotion.angle),Math.cos(p.angle-guideMotion.angle));guideMotion.x=lerp(guideMotion.x,p.x,blend);guideMotion.y=lerp(guideMotion.y,p.y,blend);guideMotion.angle+=turn*blend;constrainGuide(guideMotion);}
+    g.style.transform='translate3d('+guideMotion.x+'px,'+guideMotion.y+'px,0) translate(-50%,-50%)';$('guide-arrow').style.transform='rotate('+guideMotion.angle+'rad)';
   }
   function drawGuide(){if(mode!=='playing')return;const info=guideTarget();if(!info||!visible(info.target))return;const t=info.target;ctx.save();ctx.strokeStyle='#fff1bb';ctx.lineWidth=2;ctx.globalAlpha=.55;ctx.beginPath();ctx.arc(t.x,t.y,38+(reduced?0:Math.sin(time*3)*3),0,Math.PI*2);ctx.stroke();ctx.restore();}
   function drawMap(){mctx.clearRect(0,0,160,95);mctx.fillStyle='#062430';mctx.fillRect(0,0,160,95);const dot=(x,y,r,color)=>{mctx.fillStyle=color;mctx.beginPath();mctx.arc(x/W*160,y/H*95,r,0,Math.PI*2);mctx.fill();};mctx.strokeStyle='#709e9c33';mctx.lineWidth=1;for(let i=1;i<4;i++){mctx.beginPath();mctx.moveTo(i*40,0);mctx.lineTo(i*40,95);mctx.stroke();}collectibles.forEach(i=>{if(i.alive&&i.kind!=='food')dot(i.x,i.y,i.kind==='baby'?3:2,i.kind==='baby'?'#ffb3d6':'#ffe0a1');});powerDrops.forEach(d=>dot(d.x,d.y,3,content.powers[d.id].color));followers.forEach(f=>dot(f.x,f.y,1.8,'#ffc1dd'));enemies.forEach(e=>dot(e.x,e.y,1.5,'#f59aaa'));dot(portal.x,portal.y,3,portal.open?'#a4ffd0':'#608aa0');if(boss&&boss.hp>0)dot(boss.x,boss.y,5,'#ca9cff');dot(player.x,player.y,3,'#e8fff7');mctx.strokeStyle='#cefff037';mctx.strokeRect((camera.x-viewW/2)/W*160,(camera.y-viewH/2)/H*95,viewW/W*160,viewH/H*95);}
-  function frame(now){const dt=Math.min((now-last)/1000||.016,.1);last=now;if(!document.hidden){time+=dt;if(mode==='playing'){accumulator+=dt;while(accumulator+1e-9>=1/60){update(1/60);accumulator=Math.max(0,accumulator-1/60);if(mode!=='playing'){accumulator=0;break;}}}else accumulator=0;updateEffects(dt);drawWorld();if(now-hudAt>80){updateHUD();if(mode!=='menu')drawMap();hudAt=now;}if(toastUntil&&time>toastUntil){$('toast').style.opacity='0';toastUntil=0;}if(bannerUntil&&time>bannerUntil){$('region-banner').style.opacity='0';bannerUntil=0;}if(sound&&mode==='playing'&&time>ambientAt){ambientAt=time+3.1;tone([164.81,196,220,261.63,293.66][(Math.floor(time/4)+chapter)%5],2.5,'sine',.009);}}requestAnimationFrame(frame);}
+  function frame(now){const dt=Math.min((now-last)/1000||.016,.1);last=now;if(!document.hidden){time+=dt;if(mode==='playing'){accumulator+=dt;while(accumulator+1e-9>=1/60){update(1/60);accumulator=Math.max(0,accumulator-1/60);if(mode!=='playing'){accumulator=0;break;}}}else accumulator=0;updateEffects(dt);updateGuideHUD(dt);drawWorld();if(now-hudAt>80){updateHUD();if(mode!=='menu')drawMap();hudAt=now;}if(toastUntil&&time>toastUntil){$('toast').style.opacity='0';toastUntil=0;}if(bannerUntil&&time>bannerUntil){$('region-banner').style.opacity='0';bannerUntil=0;}if(sound&&mode==='playing'&&time>ambientAt){ambientAt=time+3.1;tone([164.81,196,220,261.63,293.66][(Math.floor(time/4)+chapter)%5],2.5,'sine',.009);}}requestAnimationFrame(frame);}
   $('continue-run').onclick=()=>start('adventure',true);$('adventure').onclick=()=>start('adventure');$('sprint').onclick=()=>start('sprint');$('pause').onclick=pause;$('dialog-home').onclick=home;$('dialog-main').onclick=()=>mode==='paused'?pause():start(playMode,mode==='lost'&&!!checkpoint);
   $('sound').onclick=()=>{sound=!sound;$('sound').textContent=sound?'Ses açık':'Ses kapalı';$('sound').setAttribute('aria-pressed',String(sound));$('sound').setAttribute('aria-label',sound?'Sesi kapat':'Sesi aç');if(!sound&&master)master.gain.value=0;else{if(master)master.gain.value=.55;chime();}};
   $('fullscreen').onclick=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await $('app').requestFullscreen();}catch{toast('Bu tarayıcıda tam ekran açılamıyor.');}};

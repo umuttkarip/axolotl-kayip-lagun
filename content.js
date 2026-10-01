@@ -1,45 +1,33 @@
 'use strict';
 window.LagoonExpansion = {
   chapters:[
-    {name:'Işıklı Sığlık',subtitle:'Minik bir ışık, büyük bir başlangıç',tint:'rgba(0,120,105,.04)',color:'#99ffe0',decor:'buds',enemies:5,stages:[
-      {name:'İlk parıltılar',type:'pearls',goal:4,copy:'Dört renkli inciyi bul.'},
-      {name:'Ada’nın saklandığı yer',type:'rescue',goal:1,copy:'Ada’yı bul; minik baloncuklarıyla sana yardım etsin.',friend:'Ada'},
-      {name:'Sığlığın ışık zinciri',type:'relay',goal:3,copy:'Üç ışık tomurcuğunu sırayla yak.'}
+    {name:'Işıklı Sığlık',subtitle:'Sığlığın ışıklarını koru',tint:'rgba(0,120,105,.04)',color:'#99ffe0',decor:'buds',enemies:14,pool:['fish','fish','jelly','jelly'],stages:[
+      {name:'Dağılmış inciler',type:'pearls',goal:18,requiredKills:12,copy:'18 inci topla; yolunu kesen 12 düşmanı sakinleştir.'},
+      {name:'Sığlığa gelen sürü',type:'combat',goal:24,copy:'Gelen sürüdeki 24 düşmanı sakinleştir. Takviye dalgalarına dikkat!'},
+      {name:'Ada’yı koru',type:'rescue',goal:1,friend:'Ada',requiredKills:12,defend:50,copy:'Ada’yı bul, 50 saniye yanında savaş ve 12 düşmanı yen.'},
+      {name:'Işık zinciri',type:'relay',goal:9,requiredKills:12,copy:'9 ışığı sırayla yak ve 12 düşmanı sakinleştir.'},
+      {name:'Sığlığın bekçisi',type:'guardian',goal:1,bossName:'SIĞLIĞIN BEKÇİSİ',pattern:'fans',copy:'Bekçiyi ve yanındaki sürüyü aş. Bölgenin tek geçidi seni bekliyor.'}
     ]},
-    {name:'Mercan Bahçesi',subtitle:'Her yaprağın altında başka bir sürpriz',tint:'rgba(27,144,102,.12)',color:'#a4efbd',decor:'flowers',enemies:6,stages:[
-      {name:'Bahçenin uyanışı',type:'relay',goal:4,copy:'Mercan tomurcuklarını sırayla aydınlat.'},
-      {name:'Yaprak arası hazineler',type:'pearls',goal:5,copy:'Bahçedeki beş renkli inciyi topla.'},
-      {name:'Bahçenin yaramazları',type:'combat',goal:5,copy:'Beş yaramazı tatlı baloncuklarla sakinleştir.'}
+    {name:'Mercan Bahçesi',subtitle:'Mercanların arasındaki pusu',tint:'rgba(27,144,102,.12)',color:'#a4efbd',decor:'flowers',enemies:17,pool:['fish','darter','jelly','spitter'],stages:[
+      {name:'Mercan yıldızları',type:'stars',goal:24,requiredKills:16,copy:'24 yıldızı bul ve 16 düşmanı yen. Çizgi çizen balıklar atılmaya hazırlanıyor!'},
+      {name:'Bahçenin saldırı dalgaları',type:'combat',goal:30,copy:'30 düşmanı yen. Uzaktan köpük atan balıklardan sıyrıl.'},
+      {name:'Mira’nın savunması',type:'rescue',goal:1,friend:'Mira',requiredKills:16,defend:60,copy:'Mira’yı bul, 60 saniye koru ve 16 düşmanı yen.'},
+      {name:'Mercan halkaları',type:'rings',goal:10,requiredKills:16,copy:'10 halkadan sırayla yüz; 16 düşmanı sakinleştir.'},
+      {name:'Mercan bekçisi',type:'guardian',goal:1,bossName:'MERCAN BEKÇİSİ',pattern:'spiral',copy:'Dönen saldırıların arasından mercan bekçisini yen.'}
     ]},
-    {name:'Unutulmuş Tapınak',subtitle:'Eski taşlarda yeni ışıklar',tint:'rgba(53,36,120,.19)',color:'#c4b1ff',decor:'runes',enemies:7,stages:[
-      {name:'Taşların sakladığı inciler',type:'pearls',goal:5,copy:'Taşların arasındaki beş inciyi bul.'},
-      {name:'Tapınağın uyuyan yolu',type:'relay',goal:4,copy:'Dört ışık mührünü sırayla uyandır.'},
-      {name:'Mor bekçinin uykusu',type:'guardian',goal:1,copy:'Mor bekçiyi baloncuklarla sakinleştir.',bossName:'MOR BEKÇİ',pattern:'spiral'}
+    {name:'Kristal Mağaralar',subtitle:'Dayanıklı muhafızların bölgesi',tint:'rgba(22,132,143,.18)',color:'#a2f2ee',decor:'crystals',enemies:20,pool:['darter','spitter','guard','jelly','fish'],stages:[
+      {name:'Kristal hazineleri',type:'pearls',goal:24,requiredKills:20,copy:'24 inci ve 20 düşman. Büyük muhafızlar daha fazla baloncuk ister.'},
+      {name:'Mağaranın kuşatması',type:'combat',goal:36,copy:'36 düşmanı yen; hızlı balıklarla muhafızlar birlikte geliyor.'},
+      {name:'Nara’nın sığınağı',type:'rescue',goal:1,friend:'Nara',requiredKills:20,defend:65,copy:'Nara’yı bul, 65 saniye birlikte diren ve 20 düşmanı yen.'},
+      {name:'Kristal mühürleri',type:'relay',goal:11,requiredKills:20,copy:'11 kristal mührünü sırayla yak ve 20 düşmanı yen.'},
+      {name:'Kristal bekçisi',type:'guardian',goal:1,bossName:'KRİSTAL BEKÇİSİ',pattern:'fans',copy:'Bekçinin geniş saldırı yelpazesinden ve muhafızlarından kaçın.'}
     ]},
-    {name:'Şeker Kabuk Koyu',subtitle:'Pembe kabuklar, neşeli dostlar',tint:'rgba(179,73,112,.12)',color:'#ffbdd5',decor:'shells',enemies:7,stages:[
-      {name:'Mira’nın küçük yardım çağrısı',type:'rescue',goal:1,copy:'Mira’yı bul; birlikte yüzmek daha eğlenceli.',friend:'Mira'},
-      {name:'Kabukların yıldız sepeti',type:'stars',goal:10,copy:'Kabukların arasındaki on yıldızı topla.'},
-      {name:'Koyun köpük oyunu',type:'combat',goal:6,copy:'Altı yaramazı köpük oyununa kat.'}
-    ]},
-    {name:'Deniz Feneri Yolu',subtitle:'Sarı ışıklar eve giden yolu gösterir',tint:'rgba(122,116,23,.10)',color:'#ffe0a1',decor:'lanterns',enemies:8,stages:[
-      {name:'Fenerlerin selamı',type:'relay',goal:5,copy:'Beş küçük feneri sırayla yak.'},
-      {name:'Kulaç halkaları',type:'rings',goal:4,copy:'Dört su halkasının içinden sırayla yüz.'},
-      {name:'Fenerin inci sandığı',type:'pearls',goal:6,copy:'Fener yolundaki altı inciyi topla.'}
-    ]},
-    {name:'Yıldızlı Akıntı',subtitle:'Suyun içinde bir avuç gökyüzü',tint:'rgba(30,61,137,.22)',color:'#b7d5ff',decor:'stars',enemies:8,stages:[
-      {name:'Minik gökyüzü',type:'stars',goal:12,copy:'Akıntının taşıdığı on iki yıldızı bul.'},
-      {name:'Nara ve yıldız izi',type:'rescue',goal:1,copy:'Nara’yı kurtar; üçüncü minik yol arkadaşın olsun.',friend:'Nara'},
-      {name:'Yıldız dansı',type:'guardian',goal:1,copy:'Yıldız bekçisinin dansını baloncuklarla tamamla.',bossName:'YILDIZ BEKÇİSİ',pattern:'fans'}
-    ]},
-    {name:'Kristal Mağaralar',subtitle:'Her köşede farklı bir renk',tint:'rgba(22,132,143,.18)',color:'#a2f2ee',decor:'crystals',enemies:9,stages:[
-      {name:'Kristal kıvrımları',type:'rings',goal:5,copy:'Beş kristal halkasından sırayla geç.'},
-      {name:'Mağaranın köpük şenliği',type:'combat',goal:7,copy:'Yedi yaramazı renkli köpüklerle sakinleştir.'},
-      {name:'Kristal ışık korosu',type:'relay',goal:5,copy:'Beş kristali sırayla aydınlat.'}
-    ]},
-    {name:'Derinliğin Kalbi',subtitle:'Dostlarınla son ışığı koru',tint:'rgba(3,5,53,.28)',color:'#d0c3ff',decor:'hearts',enemies:10,stages:[
-      {name:'Kalbin renkleri',type:'pearls',goal:7,copy:'Son kıyının yedi renkli incisini bul.'},
-      {name:'Son küçük dost',type:'rescue',goal:1,copy:'Kayıp minik dostu güvenli kıyıya ulaştır.',friend:'Pofuduk'},
-      {name:'Lagünün birlikte atan kalbi',type:'guardian',goal:1,copy:'Dostlarınla derinliğin koruyucusunu sakinleştir.',bossName:'DERİNLİĞİN KORUYUCUSU',pattern:'petals'}
+    {name:'Derinliğin Kalbi',subtitle:'Son ve en yoğun dalış',tint:'rgba(3,5,53,.28)',color:'#d0c3ff',decor:'hearts',enemies:22,pool:['guard','spitter','darter','darter','jelly'],stages:[
+      {name:'Kalbin parıltıları',type:'stars',goal:30,requiredKills:24,copy:'30 yıldız ve 24 düşman. Derinliğin sürüsü seni arıyor.'},
+      {name:'Derinliğin son sürüsü',type:'combat',goal:42,copy:'42 düşmanı yen. Yoğun dalgalarda atılmayı ve mesafeni kullan.'},
+      {name:'Pofuduk’un son çağrısı',type:'rescue',goal:1,friend:'Pofuduk',requiredKills:24,defend:70,copy:'Pofuduk’u bul, 70 saniye diren ve 24 düşmanı yen.'},
+      {name:'Kalbe giden halkalar',type:'rings',goal:12,requiredKills:24,copy:'12 halkadan sırayla geç ve 24 düşmanı sakinleştir.'},
+      {name:'Derinliğin koruyucusu',type:'guardian',goal:1,bossName:'DERİNLİĞİN KORUYUCUSU',pattern:'petals',copy:'Son koruyucuyu dostlarınla yen. Düşük canında saldırıları hızlanır!'}
     ]}
   ],
   powers:{
